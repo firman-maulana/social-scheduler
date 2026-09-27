@@ -1,17 +1,10 @@
 import { useEffect, useState } from 'react';
 import { PlusIcon } from 'lucide-react';
 import AccountList from '../components/AccountList';
-import { dummyAccountsData } from '../assets/assets';
+import { PLATFORMS } from '../assets/assets';
 import PlatformPickerModal from '../components/PlatformPickerModal';
-
-const PLATFORMS = [
-  { id: "facebook", name: "Facebook", color: "bg-blue-600", icon: "https://cdn-icons-png.flaticon.com/512/124/124010.png" },
-  { id: "instagram", name: "Instagram", color: "bg-gradient-to-tr from-purple-500 via-pink-500 to-red-500", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo.svg/800px-Instagram_logo.svg.png" },
-  { id: "twitter", name: "Twitter", color: "bg-blue-400", icon: "https://cdn-icons-png.flaticon.com/512/145/145812.png" },
-  { id: "linkedin", name: "LinkedIn", color: "bg-blue-700", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/LinkedIn_logo_2023.svg/800px-LinkedIn_logo_2023.svg.png" },
-  { id: "tiktok", name: "TikTok", color: "bg-black", icon: "https://cdn-icons-png.flaticon.com/512/3046/3046487.png" },
-  { id: "youtube", name: "YouTube", color: "bg-red-600", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282013-2017%29.svg/800px-YouTube_full-color_icon_%282013-2017%29.svg.png" },
-]
+import toast from 'react-hot-toast';
+import api from '../api/axios';
 
 const Accounts = () => {
 
@@ -19,29 +12,71 @@ const Accounts = () => {
   const [connecting, setConnecting] = useState<string | null>(null)
   const [showPlatformPicker, setShowPlatformPicker] = useState(false)
 
-  const fetchAccounts = async (isSync = false, platform?: string | null, successMsg?: string) => {
-    setAccounts(dummyAccountsData);
-    console.log(isSync, platform, successMsg)
+  const fetchAccounts = async (isSync = false, platform?: string | null, successMsg?:
+    string) => {
+    try {
+      if (isSync) {
+        const label = platform ? platform.charAt(0).toUpperCase() + platform.slice(1) :
+          "Social Media";
+        toast.loading(`Syncing ${label} account...`, { id: "sync" });
+        await api.get("/api/oauth/sync");
+        toast.success(successMsg || "Accounts synced!", { id: "sync" })
+      }
+
+      const { data } = await api.get("/api/accounts")
+      setAccounts(data)
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || "Failed to load accounts");
+    }
   }
 
   useEffect(() => {
-    fetchAccounts();
+
+    const params = new URLSearchParams(window.location.search);
+    const connectedPlatform = params.get("connected");
+    const connectedUsername = params.get("username");
+    const syncNeeded = params.get("sync") === "true";
+    const errorMsg = params.get("error");
+
+    window.history.replaceState({}, document.title, window.location.pathname)
+
+    if (connectedPlatform) {
+      const label = connectedPlatform.charAt(0).toUpperCase() + connectedPlatform.slice(1);
+      const handle = connectedUsername ? ` (@${connectedUsername})` : ""
+      fetchAccounts(true, connectedPlatform, `${label}${handle} connected!`)
+    } else if (errorMsg) {
+      toast.error(`Connection failed: ${decodeURIComponent(errorMsg)}`)
+      fetchAccounts();
+    } else if (syncNeeded) {
+      fetchAccounts(true, null, "Accounts synced!")
+    } else {
+      fetchAccounts()
+    }
+
   }, [])
 
   const handleConnect = async (platformId: string) => {
     setConnecting(platformId);
-    setTimeout(()=>{
+    try {
+      const { data } = await api.get(`/api/oauth/${platformId}/url`);
+      window.location.href = data.url;
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || `Failed to connect ${platformId}`)
       setConnecting(null)
-      setAccounts((prev)=> [...prev, dummyAccountsData[0]])
-      setShowPlatformPicker(false)
-    },1000)
+    }
   }
 
   const handleDisconnect = async (accountId: string) => {
-    setAccounts(accounts.filter((a) => a._id !== accountId))
+    try {
+      await api.delete(`/api/accounts/${accountId}`)
+      toast.success("Account disconnected")
+      await fetchAccounts()
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || "Failed to disconnect account")
+    }
   }
 
-  const connectedIds = accounts.map((a)=>a.platform)
+  const connectedIds = accounts.map((a) => a.platform)
 
   return (
     <div className="space-y-8 max-w-4xl">

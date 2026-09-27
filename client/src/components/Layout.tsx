@@ -1,22 +1,37 @@
 import { useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { MenuIcon } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
 const pageTitles: Record<string, string> = {
-  "/dashboard" : "Dashboard",
-  "/accounts" : "Social Accounts",
-  "/shedule" : "Post Scheduler",
-  "/ai-composer" : "AI Composer",
+  "/dashboard": "Dashboard",
+  "/accounts": "Social Accounts",
+  "/shedule": "Post Scheduler",
+  "/ai-composer": "AI Composer",
 }
 
 const Layout = () => {
+
+  const { isAuthenticated, isLoading } = useAuth()
 
   const location = useLocation()
 
   const title = pageTitles[location.pathname] || "Post Scheduler"
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className='size-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin' />
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
 
   return (
     <div className='flex h-screen bg-slate-50'>

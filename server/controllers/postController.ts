@@ -55,7 +55,7 @@ export const generatePost = async (req: AuthRequest, res: Response): Promise<voi
 
         // Generate Text
         const textResponse = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.8-flash",
             contents: `Generate a social media post based on this prompt: "${prompt}".
             Tone: ${tone}.
             Include relevant hashtags.
@@ -182,18 +182,26 @@ export const schedulePost = async (req: AuthRequest, res: Response): Promise<voi
         let mediaType: "image" | "video" | undefined = req.body.mediaType;
 
         if (req.file) {
-            const result = await new Promise<any>((resolve, reject) => {
-                const stream = cloudinary.uploader.upload_stream({
-                    resource_type: "auto",
-                    folder: "social-scheduler"
-                }, (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result)
+            try {
+                const result = await new Promise<any>((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream({
+                        resource_type: "auto",
+                        folder: "social-scheduler"
+                    }, (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result)
+                    });
+                    stream.end(req.file!.buffer);
                 });
-                stream.end(req.file!.buffer);
-            });
-            mediaUrl = result.secure_url;
-            mediaType = result.resource_type === "video" ? "video" : "image";
+                mediaUrl = result.secure_url;
+                mediaType = result.resource_type === "video" ? "video" : "image";
+            } catch (uploadError: any) {
+                console.error("Cloudinary upload error:", uploadError);
+                res.status(400).json({ 
+                    message: `Cloudinary Upload Failed (403): ${uploadError?.message || "Invalid Cloudinary API credentials in server/.env"}` 
+                });
+                return;
+            }
         }
 
         const post = await Post.create({

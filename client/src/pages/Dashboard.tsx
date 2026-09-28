@@ -10,7 +10,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
           try {
-            const [postsRes, accountsRes, activityRes] = await Promise.all([api.get("/api/posts"), api.get("/api/accounts"), api.get("/api/activity")])
+            const [postsRes, accountsRes ] = await Promise.all([api.get("/api/posts"), api.get("/api/accounts"), api.get("/api/activity")])
 
             const posts = postsRes.data;
             setStats({

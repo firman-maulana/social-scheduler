@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 const footerLinks = {
-    Product: ["Features", "How it works", "Pricing", "Changelog"],
+    Product: ["Features", "How it works", "Changelog"],
     Company: ["About", "Blog", "Careers", "Press"],
     Legal: ["Privacy", "Terms", "Security", "Cookies"],
 };

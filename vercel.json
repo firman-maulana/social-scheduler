@@ -1,16 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "client/dist" }
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -28,5 +17,3 @@
     }
   ]
 }
-
-

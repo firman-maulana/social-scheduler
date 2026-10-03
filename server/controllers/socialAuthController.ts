@@ -44,7 +44,7 @@ export const generateAuthUrl = async (req: AuthRequest, res: Response): Promise<
         const { platform } = req.params;
         const profileId = await getOrCreateZernioProfile(req.user);
 
-        const origin = req.headers.origin;
+        const origin = req.headers.origin || req.headers.referer?.replace(/\/$/, '') || process.env.FRONTEND_URL || "https://ai-generate-social-media-scheduler.vercel.app";
         const redirectUrl = `${origin}/accounts`;
 
         const result = await zernio.connect.getConnectUrl({

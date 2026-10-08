@@ -61,10 +61,17 @@ export const runSchedulerTask = async () => {
                 post.status = "published";
                 await post.save();
 
+                const platformNames = accounts.map((a) => {
+                    const pl = (a.platform || "").toLowerCase();
+                    if (pl === "tiktok") return "TIKTOK";
+                    if (pl === "youtube") return "YOUTUBE";
+                    return pl.toUpperCase();
+                }).join(", ");
+
                 await ActivityLog.create({
                     user: post.user,
                     actionType: "POST_PUBLISHED",
-                    description: `Published post to ${accounts.map((a) => a.platform).join(", ")}`,
+                    description: `Published post to ${platformNames}`,
                     relatedPost: post._id,
                 });
 

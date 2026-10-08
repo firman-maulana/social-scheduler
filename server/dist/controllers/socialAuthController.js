@@ -34,8 +34,10 @@ export const generateAuthUrl = async (req, res) => {
     try {
         const { platform } = req.params;
         const profileId = await getOrCreateZernioProfile(req.user);
-        const origin = req.headers.origin;
-        const redirectUrl = `${origin}/accounts`;
+        const rawOrigin = req.headers.origin || req.headers.referer?.replace(/\/$/, '') || process.env.FRONTEND_URL || "https://ai-generate-social-media-scheduler.vercel.app";
+        // Clean origin to host level only in case referer contains path like /accounts
+        const parsedOrigin = new URL(rawOrigin).origin;
+        const redirectUrl = `${parsedOrigin}/accounts`;
         const result = await zernio.connect.getConnectUrl({
             path: { platform: platform },
             query: {
@@ -65,7 +67,7 @@ export const syncAccounts = async (req, res) => {
         });
         const data = result.data;
         const zernioAccounts = data?.accounts || (Array.isArray(data) ? data : []);
-        const supportedPlatforms = ["twitter", "linkedin", "facebook", "instagram"];
+        const supportedPlatforms = ["tiktok", "youtube"];
         const syncedAccounts = [];
         for (const zAccount of zernioAccounts) {
             const zid = zAccount._id || zAccount.id;

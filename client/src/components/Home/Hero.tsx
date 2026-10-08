@@ -72,7 +72,7 @@ export default function Hero() {
                         <div className="rounded-xl p-4 space-y-3 bg-white" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
                             <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Recent Activity</div>
                             {[
-                                { text: "Post published to LinkedIn & Twitter", time: "2m ago" },
+                                { text: "Post published to TikTok & YouTube", time: "2m ago" },
                                 { text: "AI replied to 3 comments", time: "15m ago" },
                                 { text: "New post scheduled for tomorrow 9am", time: "1h ago" },
                             ].map((item) => (

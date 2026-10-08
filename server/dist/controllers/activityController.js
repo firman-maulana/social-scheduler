@@ -3,7 +3,7 @@ import { ActivityLog } from "../models/ActivityLog.js";
 // GET /api/activity
 export const getActivity = async (req, res) => {
     try {
-        const activity = await ActivityLog.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(10).populate("relatedPost", "content");
+        const activity = await ActivityLog.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(10).populate("relatedPost", "content platforms");
         res.json(activity);
     }
     catch (error) {
